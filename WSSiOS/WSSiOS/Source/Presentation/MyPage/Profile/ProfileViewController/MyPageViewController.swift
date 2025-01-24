@@ -20,16 +20,24 @@ final class MyPageViewController: UIViewController {
     //MARK: - Properties
     
     private let disposeBag = DisposeBag()
-    private let viewModel: MyPageViewModel
-    var entryType: EntryType = .otherVC
+    private let myPageViewModel: MyPageViewModel
+    private let myPageLibraryViewModel: MyPageLibraryViewModel
+    private let myPageFeedViewModel: MyPageFeedViewModel
     
+    var entryType: EntryType = .otherVC
     private var navigationTitle: String = ""
     
     private let isEntryTabbarRelay = BehaviorRelay<Bool>(value: false)
+    private let updateButtonWithLibraryView = BehaviorRelay<Bool>(value: true)
+    
     private var dropDownCellTap = PublishSubject<String>()
     private let headerViewHeightRelay = BehaviorRelay<Double>(value: 0)
-    private let viewWillAppearEvent = PublishSubject<Void>()
+    private let viewWillAppearEvent = BehaviorRelay<Void>(value: ())
     private let feedConnectedNovelViewDidTap = PublishRelay<Int>()
+    private let profileDataRelay = BehaviorRelay<MyProfileResult>(value: MyProfileResult(nickname: "",
+                                                                                         intro: "",
+                                                                                         avatarImage: "",
+                                                                                         genrePreferences: []))
     
     //MARK: - UI Components
     
@@ -37,8 +45,13 @@ final class MyPageViewController: UIViewController {
     
     // MARK: - Life Cycle
     
-    init(viewModel: MyPageViewModel) {
-        self.viewModel = viewModel
+    init(myPageViewModel: MyPageViewModel,
+         myPageLibraryViewModel: MyPageLibraryViewModel,
+         myPageFeedViewModel: MyPageFeedViewModel) {
+        
+        self.myPageViewModel = myPageViewModel
+        self.myPageLibraryViewModel = myPageLibraryViewModel
+        self.myPageFeedViewModel = myPageFeedViewModel
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -57,16 +70,17 @@ final class MyPageViewController: UIViewController {
         delegate()
         register()
         
+        bindAction()
         bindViewModel()
+        bindLibraryViewModel()
+        bindFeedViewModel()
         
         switch entryType {
         case .tabBar:
-            print("탭바에서 진입")
             AmplitudeManager.shared.track(AmplitudeEvent.MyPage.mypage)
             isEntryTabbarRelay.accept(true)
             
         case .otherVC:
-            print("다른 VC에서 진입")
             AmplitudeManager.shared.track(AmplitudeEvent.MyPage.otherMypage)
             isEntryTabbarRelay.accept(false)
             hideTabBar()
@@ -78,7 +92,7 @@ final class MyPageViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.setNavigationBarHidden(false, animated: animated)
-        self.viewWillAppearEvent.onNext(())
+        self.viewWillAppearEvent.accept(())
         decideNavigation(myPage: entryType == .tabBar, navigationTitle: navigationTitle)
     }
     
@@ -116,12 +130,30 @@ final class MyPageViewController: UIViewController {
     
     //MARK: - Bind
     
-    private func bindViewModel() {
-        let genrePreferenceButtonDidTap = Observable.merge(
-            rootView.myPageLibraryView.genrePrefrerencesView.myPageGenreOpenButton.rx.tap.map { true },
-            rootView.myPageLibraryView.genrePrefrerencesView.myPageGenreCloseButton.rx.tap.map { false }
-        )
+    private func bindAction() {
+        rootView.backButton.rx.tap
+            .observe(on: MainScheduler.instance)
+            .bind(with: self, onNext: { owner, data in
+                owner.popToLastViewController()
+            })
+            .disposed(by: disposeBag)
         
+        rootView.settingButton.rx.tap
+            .observe(on: MainScheduler.instance)
+            .bind(with: self, onNext: { owner, _ in
+                owner.pushToSettingViewController()
+            })
+            .disposed(by: disposeBag)
+        
+        NotificationCenter.default.rx.notification(NSNotification.Name("EditProfile"))
+            .observe(on: MainScheduler.instance)
+            .bind(with: self, onNext: { owner, _ in
+                owner.showToast(.editUserProfile)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func bindViewModel() {
         let libraryButtonDidTap = Observable.merge(
             rootView.mainStickyHeaderView.libraryButton.rx.tap.map { true },
             rootView.scrolledStickyHeaderView.libraryButton.rx.tap.map { true }
@@ -136,25 +168,13 @@ final class MyPageViewController: UIViewController {
             isEntryTabbar: isEntryTabbarRelay.asObservable(),
             viewWillAppearEvent: self.viewWillAppearEvent,
             headerViewHeight: headerViewHeightRelay.asDriver(),
-            resizefeedTableViewHeight: rootView.myPageFeedView.myPageFeedTableView.feedTableView.rx.observe(CGSize.self, "contentSize"),
-            resizeKeywordCollectionViewHeight: rootView.myPageLibraryView.novelPrefrerencesView.preferencesCollectionView.rx.observe(CGSize.self, "contentSize"),
             scrollOffset: rootView.scrollView.rx.contentOffset.asDriver(),
-            settingButtonDidTap: rootView.settingButton.rx.tap,
             dropdownButtonDidTap: dropDownCellTap,
             editButtonDidTap: rootView.headerView.userImageChangeButton.rx.tap,
-            backButtonDidTap: rootView.backButton.rx.tap,
-            genrePreferenceButtonDidTap: genrePreferenceButtonDidTap,
             libraryButtonDidTap: libraryButtonDidTap,
-            feedButtonDidTap: feedButtonDidTap,
-            inventoryViewDidTap: rootView.myPageLibraryView.inventoryView.inventoryView.rx.tapGesture()
-                .when(.recognized)
-                .asObservable(),
-            feedDetailButtonDidTap: rootView.myPageFeedView.myPageFeedDetailButton.rx.tap,
-            editProfileNotification: NotificationCenter.default.rx.notification(NSNotification.Name("EditProfile")).asObservable(),
-            feedTableViewItemSelected: rootView.myPageFeedView.myPageFeedTableView.feedTableView.rx.itemSelected.asObservable(),
-            feedConnectedNovelViewDidTap: feedConnectedNovelViewDidTap.asObservable())
+            feedButtonDidTap: feedButtonDidTap)
         
-        let output = viewModel.transform(from: input, disposeBag: disposeBag)
+        let output = myPageViewModel.transform(from: input, disposeBag: disposeBag)
         
         output.isMyPage
             .observe(on: MainScheduler.instance)
@@ -169,6 +189,7 @@ final class MyPageViewController: UIViewController {
             .observe(on: MainScheduler.instance)
             .bind(with: self, onNext: { owner, data in
                 owner.rootView.headerView.bindData(data: data)
+                owner.profileDataRelay.accept(data)
             })
             .disposed(by: disposeBag)
         
@@ -187,13 +208,6 @@ final class MyPageViewController: UIViewController {
                 owner.rootView.scrolledStickyHeaderView.isHidden = !update
                 owner.rootView.mainStickyHeaderView.isHidden = update
                 owner.rootView.headerView.isHidden = update
-            })
-            .disposed(by: disposeBag)
-        
-        output.pushToSettingViewController
-            .observe(on: MainScheduler.instance)
-            .bind(with: self, onNext: { owner, _ in
-                owner.pushToSettingViewController()
             })
             .disposed(by: disposeBag)
         
@@ -222,6 +236,50 @@ final class MyPageViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
+        output.stickyHeaderAction
+            .observe(on: MainScheduler.instance)
+            .bind(with: self, onNext: { owner, library in
+                owner.rootView.showContentView(showLibraryView: library)
+                owner.rootView.mainStickyHeaderView.updateSelection(isLibrarySelected: library)
+                owner.rootView.scrolledStickyHeaderView.updateSelection(isLibrarySelected: library)
+                
+                owner.rootView.myPageLibraryView.isHidden = !library
+                owner.rootView.myPageFeedView.isHidden = library
+                
+                owner.rootView.contentView.snp.remakeConstraints {
+                    $0.edges.equalToSuperview()
+                    $0.width.equalToSuperview()
+                    
+                    if library {
+                        $0.bottom.equalTo(owner.rootView.myPageLibraryView.snp.bottom)
+                    } else {
+                        $0.bottom.equalTo(owner.rootView.myPageFeedView.snp.bottom)
+                    }
+                }
+                
+                owner.rootView.layoutIfNeeded()
+                
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func bindLibraryViewModel() {
+        let genrePreferenceButtonDidTap = Observable.merge(
+            rootView.myPageLibraryView.genrePrefrerencesView.myPageGenreOpenButton.rx.tap.map { true },
+            rootView.myPageLibraryView.genrePrefrerencesView.myPageGenreCloseButton.rx.tap.map { false }
+        )
+        
+        let input = MyPageLibraryViewModel.Input(
+            viewWillAppearEvent: self.viewWillAppearEvent,
+            genrePreferenceButtonDidTap: genrePreferenceButtonDidTap,
+            inventoryViewDidTap: rootView.myPageLibraryView.inventoryView.inventoryView.rx.tapGesture()
+                .when(.recognized)
+                .asObservable(),
+            resizeKeywordCollectionViewHeight: rootView.myPageLibraryView.novelPrefrerencesView.preferencesCollectionView.rx.observe(CGSize.self, "contentSize")
+        )
+        
+        let output = myPageLibraryViewModel.transform(from: input, disposeBag: disposeBag)
+        
         output.bindGenreData
             .observe(on: MainScheduler.instance)
             .do(onNext: { [weak self] data in
@@ -245,9 +303,8 @@ final class MyPageViewController: UIViewController {
         output.isExistPreferneces
             .observe(on: MainScheduler.instance)
             .bind(with: self, onNext: { owner, isExist in
-                if !isExist {
-                    owner.rootView.myPageLibraryView.updatePreferencesEmptyView(isEmpty: !isExist)
-                }
+                owner.rootView.myPageLibraryView.updatePreferencesEmptyView(isEmpty: !isExist)
+                owner.rootView.myPageLibraryView.layoutIfNeeded()
             })
             .disposed(by: disposeBag)
         
@@ -276,30 +333,31 @@ final class MyPageViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        output.stickyHeaderAction
+        output.pushToLibraryViewController
             .observe(on: MainScheduler.instance)
-            .bind(with: self, onNext: { owner, library in
-                owner.rootView.mainStickyHeaderView.updateSelection(isLibrarySelected: library)
-                owner.rootView.scrolledStickyHeaderView.updateSelection(isLibrarySelected: library)
-                
-                owner.rootView.myPageLibraryView.isHidden = !library
-                owner.rootView.myPageFeedView.isHidden = library
-                
-                owner.rootView.contentView.snp.remakeConstraints {
-                    $0.edges.equalToSuperview()
-                    $0.width.equalToSuperview()
-                    
-                    if library {
-                        $0.bottom.equalTo(owner.rootView.myPageLibraryView.snp.bottom)
-                    } else {
-                        $0.bottom.equalTo(owner.rootView.myPageFeedView.snp.bottom)
-                    }
-                }
-                
-                owner.rootView.layoutIfNeeded()
-                
+            .bind(with: self, onNext: { owner, userId in
+                owner.pushToLibraryViewController(userId: userId)
             })
             .disposed(by: disposeBag)
+        
+        output.updateKeywordCollectionViewHeight
+            .observe(on: MainScheduler.instance)
+            .subscribe(with: self, onNext: { owner, height in
+                owner.rootView.myPageLibraryView.novelPrefrerencesView.updateKeywordViewHeight(height: height)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func bindFeedViewModel() {
+        let input = MyPageFeedViewModel.Input(
+            viewWillAppearEvent: self.viewWillAppearEvent,
+            profileData: self.profileDataRelay,
+            feedDetailButtonDidTap: rootView.myPageFeedView.myPageFeedDetailButton.rx.tap,
+            feedTableViewItemSelected: rootView.myPageFeedView.myPageFeedTableView.feedTableView.rx.itemSelected.asObservable(),
+            feedConnectedNovelViewDidTap: feedConnectedNovelViewDidTap.asObservable(),
+            resizefeedTableViewHeight: rootView.myPageFeedView.myPageFeedTableView.feedTableView.rx.observe(CGSize.self, "contentSize"))
+        
+        let output = myPageFeedViewModel.transform(from: input, disposeBag: disposeBag)
         
         output.bindFeedData
             .observe(on: MainScheduler.instance)
@@ -314,6 +372,7 @@ final class MyPageViewController: UIViewController {
             .observe(on: MainScheduler.instance)
             .bind(with: self, onNext: { owner, isEmpty in
                 owner.rootView.myPageFeedView.isEmptyView(isEmpty: isEmpty)
+                owner.rootView.myPageFeedView.layoutIfNeeded()
             })
             .disposed(by: disposeBag)
         
@@ -324,31 +383,10 @@ final class MyPageViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        output.pushToLibraryViewController
-            .observe(on: MainScheduler.instance)
-            .bind(with: self, onNext: { owner, userId in
-                owner.pushToLibraryViewController(userId: userId)
-            })
-            .disposed(by: disposeBag)
-        
-        output.updateButtonWithLibraryView
-            .observe(on: MainScheduler.instance)
-            .bind(with: self, onNext: { owner, showLibraryView in
-                owner.rootView.showContentView(showLibraryView: showLibraryView)
-            })
-            .disposed(by: disposeBag)
-        
         output.updateFeedTableViewHeight
             .observe(on: MainScheduler.instance)
             .subscribe(with: self, onNext: { owner, height in
                 owner.rootView.myPageFeedView.myPageFeedTableView.updateTableViewHeight(height: height)
-            })
-            .disposed(by: disposeBag)
-        
-        output.updateKeywordCollectionViewHeight
-            .observe(on: MainScheduler.instance)
-            .subscribe(with: self, onNext: { owner, height in
-                owner.rootView.myPageLibraryView.novelPrefrerencesView.updateKeywordViewHeight(height: height)
             })
             .disposed(by: disposeBag)
         
@@ -357,13 +395,6 @@ final class MyPageViewController: UIViewController {
             .bind(with: self, onNext: { owner, userData in
                 let (id, data) = userData
                 owner.pushToMyPageFeedDetailViewController(userId: id, useData: data)
-            })
-            .disposed(by: disposeBag)
-        
-        output.showToastView
-            .observe(on: MainScheduler.instance)
-            .bind(with: self, onNext: { owner, _ in
-                owner.showToast(.editUserProfile)
             })
             .disposed(by: disposeBag)
         
@@ -391,7 +422,7 @@ final class MyPageViewController: UIViewController {
 
 extension MyPageViewController: UICollectionViewDelegateFlowLayout, UIScrollViewDelegate, UITableViewDelegate {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        guard let keywords = try? viewModel.bindKeywordRelay.value,
+        guard let keywords = try? myPageLibraryViewModel.bindKeywordRelay.value,
               indexPath.row < keywords.count else {
             return CGSize(width: 0, height: 0)
         }
@@ -460,4 +491,3 @@ extension MyPageViewController: FeedTableViewDelegate {
         self.feedConnectedNovelViewDidTap.accept(novelId)
     }
 }
-

@@ -308,7 +308,17 @@ extension UIViewController {
     
     func pushToMyPageViewController(userId: Int) {
         let viewController = MyPageViewController(
-            viewModel: MyPageViewModel(
+            myPageViewModel: MyPageViewModel(
+                userRepository: DefaultUserRepository(
+                    userService: DefaultUserService(),
+                    blocksService: DefaultBlocksService()),
+                profileId: userId),
+            myPageLibraryViewModel: MyPageLibraryViewModel(
+                userRepository: DefaultUserRepository(
+                    userService: DefaultUserService(),
+                    blocksService: DefaultBlocksService()),
+                profileId: userId),
+            myPageFeedViewModel: MyPageFeedViewModel(
                 userRepository: DefaultUserRepository(
                     userService: DefaultUserService(),
                     blocksService: DefaultBlocksService()),

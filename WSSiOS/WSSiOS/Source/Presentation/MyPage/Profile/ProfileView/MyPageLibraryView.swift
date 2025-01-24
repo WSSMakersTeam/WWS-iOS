@@ -129,16 +129,14 @@ final class MyPageLibraryView: UIView {
     }
     
     func updatePreferencesEmptyView(isEmpty: Bool) {
-        if isEmpty {
-            [genrePrefrerencesView,
-             secondDividerView,
-             novelPrefrerencesView] .forEach { view in
-                view.do {
-                    $0.isHidden = true
-                }
+        [genrePrefrerencesView,
+         secondDividerView,
+         novelPrefrerencesView] .forEach { view in
+            view.do {
+                $0.isHidden = isEmpty
             }
             
-            preferencesEmptyView.isHidden  = false
+            preferencesEmptyView.isHidden = !isEmpty
         }
     }
 }

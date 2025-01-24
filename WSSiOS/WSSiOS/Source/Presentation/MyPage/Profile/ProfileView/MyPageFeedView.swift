@@ -49,6 +49,10 @@ final class MyPageFeedView: UIView {
             $0.axis = .vertical
         }
         
+        showMoreActivityButtonView.do {
+            $0.isHidden = true
+        }
+        
         myPageFeedDetailButton.do {
             $0.layer.cornerRadius = 8
             $0.layer.borderColor = UIColor.wssPrimary100.cgColor
@@ -132,7 +136,6 @@ final class MyPageFeedView: UIView {
             
         }
     }
-    
     
     func isEmptyView(isEmpty: Bool) {
         myPageFeedEmptyView.isHidden = !isEmpty

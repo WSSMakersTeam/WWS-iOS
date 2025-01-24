@@ -394,6 +394,8 @@
 		E497C9B82CF3B0160079C30D /* MyPageEditAvatarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E497C9B72CF3B0160079C30D /* MyPageEditAvatarViewModel.swift */; };
 		E497C9BA2CF3B0220079C30D /* MyPageEditAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E497C9B92CF3B0220079C30D /* MyPageEditAvatarView.swift */; };
 		E497C9BC2CF3BBC90079C30D /* MyPageEditAvatarCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E497C9BB2CF3BBC90079C30D /* MyPageEditAvatarCollectionViewCell.swift */; };
+		E4C888752D40F58F00035E6A /* MyPageLibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C888742D40F58F00035E6A /* MyPageLibraryViewModel.swift */; };
+		E4C888772D413EC500035E6A /* MyPageFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C888762D413EC500035E6A /* MyPageFeedViewModel.swift */; };
 		E4EC12E02D06FDB200B961BB /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = E4EC12DF2D06FDB200B961BB /* Release.xcconfig */; };
 		E4FEAB322CFF4DD200D45558 /* MyPageFeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FEAB312CFF4DD200D45558 /* MyPageFeedDetailView.swift */; };
 		E4FEAB342CFF4DE500D45558 /* MyPageFeedDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FEAB332CFF4DE500D45558 /* MyPageFeedDetailViewController.swift */; };
@@ -777,6 +779,8 @@
 		E497C9B72CF3B0160079C30D /* MyPageEditAvatarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageEditAvatarViewModel.swift; sourceTree = "<group>"; };
 		E497C9B92CF3B0220079C30D /* MyPageEditAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageEditAvatarView.swift; sourceTree = "<group>"; };
 		E497C9BB2CF3BBC90079C30D /* MyPageEditAvatarCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageEditAvatarCollectionViewCell.swift; sourceTree = "<group>"; };
+		E4C888742D40F58F00035E6A /* MyPageLibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageLibraryViewModel.swift; sourceTree = "<group>"; };
+		E4C888762D413EC500035E6A /* MyPageFeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageFeedViewModel.swift; sourceTree = "<group>"; };
 		E4EC12DF2D06FDB200B961BB /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		E4FEAB312CFF4DD200D45558 /* MyPageFeedDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageFeedDetailView.swift; sourceTree = "<group>"; };
 		E4FEAB332CFF4DE500D45558 /* MyPageFeedDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPageFeedDetailViewController.swift; sourceTree = "<group>"; };
@@ -1214,6 +1218,8 @@
 			isa = PBXGroup;
 			children = (
 				2C9A19682C567D6B0043044A /* MyPageViewModel.swift */,
+				E4C888742D40F58F00035E6A /* MyPageLibraryViewModel.swift */,
+				E4C888762D413EC500035E6A /* MyPageFeedViewModel.swift */,
 				2C41E0D32CA494D900FFD233 /* MyPageEditProfileViewModel.swift */,
 				E497C9B72CF3B0160079C30D /* MyPageEditAvatarViewModel.swift */,
 				E4FEAB352CFF4E5300D45558 /* MyPageFeedDetailViewModel.swift */,
@@ -2658,6 +2664,7 @@
 				B9DC62022CC9391A00E87DD7 /* DetailSearchResultNovelView.swift in Sources */,
 				CDC03F4D2CA6C492002D301F /* NovelReviewService.swift in Sources */,
 				2CD2FE402C43E7B60033366C /* WSSAlertViewController.swift in Sources */,
+				E4C888772D413EC500035E6A /* MyPageFeedViewModel.swift in Sources */,
 				2C8F89512C50E5200056895B /* MyPageDeleteIDReasonTableViewCell.swift in Sources */,
 				B99FBE3E2D21B6E500787D1C /* FeedDetailUnknownFeedErrorView.swift in Sources */,
 				2CD2291E2B42E685005400BE /* SceneDelegate.swift in Sources */,
@@ -2704,6 +2711,7 @@
 				B974EA432CC8E57100169639 /* DetailSearchNovelRatingStatusButton.swift in Sources */,
 				C99DDFD52C86138E00EDC0C4 /* SearchBarView.swift in Sources */,
 				2CD911562C0D8A1A006B8D72 /* FeedPageBarCollectionViewCell.swift in Sources */,
+				E4C888752D40F58F00035E6A /* MyPageLibraryViewModel.swift in Sources */,
 				B9ACACC12CE3A7E400D1D47A /* HomeInterestEmptyView.swift in Sources */,
 				39BA7F752BCABF1D0045B2B7 /* KeywordLink.swift in Sources */,
 				CD8747A92C9EDA3000D0ADAD /* NovelDateSelectModalTitleView.swift in Sources */,
