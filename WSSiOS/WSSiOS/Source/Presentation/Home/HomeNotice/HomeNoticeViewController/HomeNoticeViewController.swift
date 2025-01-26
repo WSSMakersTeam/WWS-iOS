@@ -100,12 +100,14 @@ final class HomeNoticeViewController: UIViewController {
             .disposed(by: disposeBag)
         
         output.pushToFeedDetailViewController
+            .observe(on: MainScheduler.instance)
             .subscribe(with: self, onNext: { owner, feedId in
                 owner.pushToFeedDetailViewController(feedId: feedId)
             })
             .disposed(by: disposeBag)
         
         output.pushToNoticeDetailViewController
+            .observe(on: MainScheduler.instance)
             .subscribe(with: self, onNext: { owner, notificationId in
                 owner.pushToNotificationDetailViewController(notificationId: notificationId)
             })
